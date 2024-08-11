@@ -60,10 +60,10 @@ def extract_data_for_training(data, tokenizer, max_len=512):
 
 # JSON dosyalarının yolları
 file_paths = [
-    '/Users/gizemtuguz/Desktop/deneme/filtered_data_kitaplık.json',
-    '/Users/gizemtuguz/Desktop/deneme/filtered_data_kitaplık_eng.json',
-    '/Users/gizemtuguz/Desktop/deneme/filtered_data_epaticom.json',
-    '/Users/gizemtuguz/Desktop/deneme/basic_data.json'
+    './filtered_data_kitaplık.json',
+    './filtered_data_kitaplık_eng.json',
+    './filtered_data_epaticom.json',
+    './basic_data.json'
 ]
 
 # Tüm JSON dosyalarından verileri birleştirme
