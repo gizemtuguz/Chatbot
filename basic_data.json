@@ -1,0 +1,154 @@
+[
+    {
+        "Title": "Hello",
+        "Content": [
+            {
+                "Paragraph": "Hello! How can I assist you today?"
+            }
+        ]
+    },
+    {
+        "Title": "Hi",
+        "Content": [
+            {
+                "Paragraph": "Hi! How can I assist you?"
+            }
+        ]
+    },
+    {
+        "Title": "Good morning",
+        "Content": [
+            {
+                "Paragraph": "Good morning! How can I assist you today?"
+            }
+        ]
+    },
+    {
+        "Title": "Good afternoon",
+        "Content": [
+            {
+                "Paragraph": "Good afternoon! How can I assist you?"
+            }
+        ]
+    },
+    {
+        "Title": "Good evening",
+        "Content": [
+            {
+                "Paragraph": "Good evening! How can I assist you?"
+            }
+        ]
+    },
+    {
+        "Title": "Merhaba",
+        "Content": [
+            {
+                "Paragraph": "Merhaba! Size nasıl yardımcı olabilirim?"
+            }
+        ]
+    },
+    {
+        "Title": "Günaydın",
+        "Content": [
+            {
+                "Paragraph": "Günaydın! Size nasıl yardımcı olabilirim?"
+            }
+        ]
+    },
+    {
+        "Title": "İyi akşamlar",
+        "Content": [
+            {
+                "Paragraph": "İyi akşamlar! Size nasıl yardımcı olabilirim?"
+            }
+        ]
+    },
+    {
+        "Title": "Selam",
+        "Content": [
+            {
+                "Paragraph": "Selam! Size nasıl yardımcı olabilirim?"
+            }
+        ]
+    },
+    {
+        "Title": "Goodbye",
+        "Content": [
+            {
+                "Paragraph": "Goodbye! Have a great day!"
+            }
+        ]
+    },
+    {
+        "Title": "Bye",
+        "Content": [
+            {
+                "Paragraph": "Bye! Take care!"
+            }
+        ]
+    },
+    {
+        "Title": "Thank you",
+        "Content": [
+            {
+                "Paragraph": "You're welcome! If you need anything else, feel free to ask!"
+            }
+        ]
+    },
+    {
+        "Title": "Thanks",
+        "Content": [
+            {
+                "Paragraph": "You're welcome! Have a great day!"
+            }
+        ]
+    },
+    {
+        "Title": "See you",
+        "Content": [
+            {
+                "Paragraph": "See you later! Have a great day!"
+            }
+        ]
+    },
+    {
+        "Title": "Güle güle",
+        "Content": [
+            {
+                "Paragraph": "Güle güle! İyi günler dilerim!"
+            }
+        ]
+    },
+    {
+        "Title": "Hoşça kal",
+        "Content": [
+            {
+                "Paragraph": "Hoşça kal! Kendinize iyi bakın!"
+            }
+        ]
+    },
+    {
+        "Title": "Teşekkür ederim",
+        "Content": [
+            {
+                "Paragraph": "Rica ederim! Yardıma ihtiyacınız olursa sormaktan çekinmeyin!"
+            }
+        ]
+    },
+    {
+        "Title": "Teşekkürler",
+        "Content": [
+            {
+                "Paragraph": "Rica ederim! Harika bir gün geçirin!"
+            }
+        ]
+    },
+    {
+        "Title": "Görüşürüz",
+        "Content": [
+            {
+                "Paragraph": "Görüşürüz! Harika bir gün dilerim!"
+            }
+        ]
+    }
+]
