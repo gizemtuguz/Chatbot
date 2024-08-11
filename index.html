@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popup Chatbot</title>
+    <style>
+        /* Chatbot popup stili */
+        #chatbot {
+            position: fixed;
+            bottom: 80px;
+            right: 10px;
+            margin: 10px;
+            width: 400px;
+            display: none;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            flex-direction: column;
+            max-height: 500px;
+        }
+        #chatbot-header {
+            background-color: #E30613;
+            color: white;
+            padding: 10px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            text-align: center;
+        }
+        #chatbot-messages {
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto;
+            font-size: 16px;
+            background-color: #F7F7F7; 
+            display: flex;
+            flex-direction: column;
+            max-height: 380px;
+        }
+
+        #openChatbot {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background-color: #E30613; /* Sitenin kırmızı rengi */
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 70%; /* Mesaj kutusunun genişliği */
+            font-size: 16px;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background-color: white;
+            word-wrap: break-word; /* Uzun kelimeler ve URL'ler sarılır */
+        }
+
+        .bot-message {
+            align-self: flex-start; /* Bot mesajını sola hizalar */
+            background-color: #f0f0f0;
+        }
+
+        .user-message {
+            align-self: flex-end; /* Kullanıcı mesajını sağa hizalar */
+            background-color: #E30613;
+            color: #f0f0f0;
+        }
+
+        #chatbot-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ccc;
+        }
+        #chatbot-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        #chatbot-input button {
+            padding: 10px;
+            background-color: #E30613;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #chatbot-input button:hover {
+            background-color: #C50510;
+        }
+        #openChatbot {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background-color: #E30613;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Resimleri boyutlandırma */
+        #chatbot-messages img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Chatbot Popup -->
+<div id="chatbot">
+    <div id="chatbot-header">Epati Chatbot</div>
+    <div id="chatbot-messages">
+        <div class="message bot-message">Merhaba! Size nasıl yardımcı olabilirim?</div>
+    </div>
+    <div id="chatbot-input">
+        <input type="text" id="userInput" placeholder="Mesajınızı buraya yazın...">
+        <button onclick="sendMessage()">Gönder</button>
+    </div>
+</div>
+
+<!-- Chatbot Açma Butonu -->
+<button id="openChatbot" onclick="toggleChatbot()">&#128172;</button>
+
+<script>
+    // Chatbot açma/kapatma işlemleri
+    function toggleChatbot() {
+        var chatbot = document.getElementById("chatbot");
+        if (chatbot.style.display === "none" || chatbot.style.display === "") {
+            chatbot.style.display = "block";
+        } else {
+            chatbot.style.display = "none";
+        }
+    }
+
+    // Mesaj gönderme işlemi
+    function sendMessage() {
+        var userInput = document.getElementById("userInput").value;
+        var chatbox = document.getElementById("chatbot-messages");
+
+        // Kullanıcı mesajı
+        var userMessageBox = document.createElement("div");
+        userMessageBox.className = "message user-message";
+        userMessageBox.textContent = userInput;
+        chatbox.appendChild(userMessageBox);
+
+        // Sunucuya istek gönder
+        fetch('http://127.0.0.1:5000/chatbot', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message: userInput })
+        })
+        .then(response => response.json())
+        .then(data => {
+            var botMessageBox = document.createElement("div");
+            botMessageBox.className = "message bot-message";
+            botMessageBox.innerHTML = data.response; // içeriği HTML olarak ekle
+            chatbox.appendChild(botMessageBox);
+            chatbox.scrollTop = chatbox.scrollHeight;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            var errorResponse = document.createElement("div");
+            errorResponse.className = "message bot-message";
+            errorResponse.textContent = "Bir hata oluştu, lütfen tekrar deneyin.";
+            chatbox.appendChild(errorResponse);
+        });
+
+        document.getElementById("userInput").value = "";
+    }
+</script>
+
+</body>
+</html>
