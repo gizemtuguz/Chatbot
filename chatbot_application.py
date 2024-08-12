@@ -4,14 +4,15 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
-# Model ve tokenizer'ı yükle
+#model ve tokenizer'ı yükler
 model_path = "./trained_model"
 model = DistilBertForSequenceClassification.from_pretrained(model_path)
 tokenizer = DistilBertTokenizer.from_pretrained(model_path)
 
-# Orijinal veri DataFrame'ini yükleme
+#orijinal veri dataframe yükler
 df_original = pd.read_pickle('data_original.pkl')
 
+#tabloları başlık ve içerik olarak dataframe çevrilir
 def parse_table_data(table):
     try:
         headers = table.get('Headers', [])
@@ -22,6 +23,7 @@ def parse_table_data(table):
         print(f"Error processing table data: {e}")
         return None
 
+#dataframe çevrilen tablo bilgileri html conseptine çevirilir
 def table_to_html(table):
     headers = table.get('Headers', [])
     rows = table.get('Rows', [])
@@ -37,7 +39,7 @@ def get_chatbot_response(text, df_original):
 
     vectorizer = TfidfVectorizer()
 
-    # Başlıklar arasındaki benzerlikleri hesapla
+    #başıklar arasındaki benzerlik hesaplanır
     for _, row in df_original.iterrows():
         title = row['Title']
         corpus = [title, text]
@@ -51,9 +53,10 @@ def get_chatbot_response(text, df_original):
     if best_title_similarity < 0.2:  # Eşik değeri
         return "Bu konuda size daha iyi yardımcı olabilmem için daha detaylı bilgi veriniz lütfen"
 
-    # En yüksek benzerlik skoru olan başlık altındaki tüm içerikleri göster
+    #en yüksek benzerlik skoru olan başlık altındaki tüm içerikleri gösterir
     most_relevant_group = df_original[df_original['Title'] == best_title]
 
+    #başta response boş olarak gelir contentteki bileşenler buraya eklenir
     response = ""
     for _, row in most_relevant_group.iterrows():
         content_list = row['Content']
