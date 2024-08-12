@@ -1,8 +1,9 @@
 import pandas as pd
-from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, Trainer, TrainingArguments
+from transformers import BertTokenizer, BertForSequenceClassification, Trainer, TrainingArguments, EarlyStoppingCallback
 from sklearn.model_selection import train_test_split
 import torch
 from torch.utils.data import Dataset
+from torch.nn import functional as F
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 
 # Eğitim ve test veri setlerini yükleme
@@ -12,8 +13,8 @@ df_training = pd.read_pickle('data_training.pkl')
 X_train, X_test = train_test_split(df_training, test_size=0.2, random_state=42)
 
 # Tokenizer ve model yükleme
-tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
-model = DistilBertForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels=2)
+tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+model = BertForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=2)
 
 # Verileri tokenleştirme
 train_encodings = tokenizer(list(X_train['Content']), truncation=True, padding=True, max_length=512)
@@ -59,7 +60,9 @@ training_args = TrainingArguments(
     eval_steps=50,
     save_steps=50,
     save_total_limit=1,
-    load_best_model_at_end=True
+    load_best_model_at_end=True,
+    learning_rate=2e-5,  # Öğrenme oranı
+    lr_scheduler_type="linear",  # Öğrenme oranını adımlarla düşürme stratejisi
 )
 
 # Hesaplama fonksiyonunu ekleme
@@ -75,16 +78,20 @@ def compute_metrics(pred):
         'recall': recall
     }
 
-# Custom Trainer sınıfı (ağırlıklandırma için)
+# Custom Trainer sınıfı (Focal Loss için)
 class WeightedTrainer(Trainer):
     def compute_loss(self, model, inputs, return_outputs=False):
         labels = inputs.get("labels")
         weights = inputs.get("weight")
         outputs = model(**inputs)
         logits = outputs.get('logits')
-        loss_fct = torch.nn.CrossEntropyLoss(weight=weights)
-        loss = loss_fct(logits, labels)
-        return (loss, outputs) if return_outputs else loss
+        
+        # Focal Loss hesaplama
+        ce_loss = F.cross_entropy(logits, labels, reduction='none')
+        pt = torch.exp(-ce_loss)
+        focal_loss = ((1 - pt) ** 2 * ce_loss).mean()  # Focal Loss uygulandı
+        
+        return (focal_loss, outputs) if return_outputs else focal_loss
 
 # Trainer ayarlama
 trainer = WeightedTrainer(
@@ -92,7 +99,7 @@ trainer = WeightedTrainer(
     args=training_args,
     train_dataset=train_dataset,
     eval_dataset=test_dataset,
-    compute_metrics=compute_metrics
+    compute_metrics=compute_metrics,
 )
 
 # Eğitimi başlatma

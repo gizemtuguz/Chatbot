@@ -1,3 +1,6 @@
+#daha fazla bilgiye ihtiyacınız olması durumunda data_fetch_epaticom.py dosyasına bakabilirsiniz
+
+
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -17,7 +20,7 @@ def parse_page(url):
     title = soup.find('title').get_text(strip=True) if soup.find('title') else 'No Title'
 
     page_data = {"URL": url, "Title": title, "Content": []}
-    elements = soup.find_all(['h1', 'h3', 'p', 'table', 'img', 'ul'])
+    elements = soup.find_all(['h1', 'h3', 'p', 'table', 'img', 'ul'])           #türkçe kitaplığın html dosyaında h4 kullanılmadığı için buraya dahil edilmedi
     current_heading = None
     current_subheading = None
     paragraph_content = ""

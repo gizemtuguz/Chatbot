@@ -39,10 +39,10 @@ def chatbot_response():
                 response = response.replace(image_url, base64_image)
 
         print(f"Chatbot response: {response}")
-        return jsonify({'response': response})
+        return jsonify({'response': response})          #chatbotun cevabını json formatına çevirir 
     except Exception as e:
         print(f"Error: {e}")
-        return jsonify({'response': 'An error occurred while processing your request.'}), 500           #hatbotun cevabını json formatına çevirir
+        return jsonify({'response': 'An error occurred while processing your request.'}), 500           #"iç sunucu hatası" hata koduyla mesj döndürme
 
 @app.route('/test', methods=['GET'])            #test amacıyla get isteği atılır
 def test():
