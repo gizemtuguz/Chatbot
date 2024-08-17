@@ -27,23 +27,23 @@ unwanted_titles = [
 def should_skip_title(title):
     return any(unwanted_title in title for unwanted_title in unwanted_titles)
 
-# Adım bazlı başlıkları birleştirmek için fonksiyon
-def merge_step_titles(title):
-    match = re.match(r"(.+?) - Adım \d+", title)
-    if match:
-        return match.group(1).strip()
-    return title
-
 # Başlıkları dönüştürmek için fonksiyon
 def transform_heading(heading):
     if heading and 'ile Başlayan Terimler' in heading:
         parts = heading.split(' - ')
         if len(parts) > 1:
             term = parts[-1].strip()
-            return f"{term} ne demek?"
+            return f"{term} nedir?"
     if heading.startswith("Sık Sorulan Sorular -"):
         return heading.replace("Sık Sorulan Sorular -", "").strip()
     return heading
+
+# Parantez içindeki metni ayırma fonksiyonu
+def split_title_with_parentheses(title):
+    match = re.match(r"(.+?) \((.+?)\)", title)
+    if match:
+        return [f"{match.group(1).strip()}", f"{match.group(2).strip()} nedir?"]
+    return [title]
 
 # İçeriği birleştir ve filtrele
 for item in data:
@@ -55,8 +55,6 @@ for item in data:
     
     content_list = item.get("Content", [])
     
-    # Başlıkları Adım numaralarına göre birleştir
-    merged_title = merge_step_titles(title)
     filtered_content = []
     
     for content in content_list:
@@ -67,8 +65,10 @@ for item in data:
     
     # Eğer filtrelenmiş içerik varsa ve içerik boş değilse, başlığı dönüştürerek yeni veriye ekle
     if filtered_content:
-        transformed_title = transform_heading(merged_title)
-        combined_data[transformed_title].extend(filtered_content)
+        split_titles = split_title_with_parentheses(title)
+        for split_title in split_titles:
+            transformed_title = transform_heading(split_title)
+            combined_data[transformed_title].extend(filtered_content)
 
 # Filtrelenmiş ve birleştirilmiş verileri JSON dosyasına kaydetme
 final_data = [{'Title': title, 'Content': contents} for title, contents in combined_data.items()]

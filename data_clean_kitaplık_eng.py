@@ -32,6 +32,10 @@ for page in data:
                     combined_data[title].append({'Image': img_url})
             if 'Table' in content:
                 combined_data[title].append({'Table': content['Table']})
+            if 'List' in content:
+                combined_data[title].append({'List': content['List']})
+            if 'Blockquote' in content:
+                combined_data[title].append({'Blockquote': content['Blockquote']})       
 
 cleaned_combined_data = [{'Title': title, 'Content': contents} for title, contents in combined_data.items()]
 

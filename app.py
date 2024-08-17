@@ -19,7 +19,7 @@ def fetch_image_as_base64(image_url):
         print(f"Error fetching image: {e}")
         return None
 
-#porit isteği gelmesi durumunda fonksiyon çalıştırır
+#post isteği gelmesi durumunda fonksiyon çalıştırır
 @app.route('/chatbot', methods=['POST'])            
 def chatbot_response():
     user_input = request.json.get('message')
@@ -27,7 +27,6 @@ def chatbot_response():
     
     try:
         response = get_chatbot_response(user_input, df_original)               #kullanıcının inputuna en uygun cevabı bulur
-        
         #eğer yanıt bir img src içeriyorsa resmi indir ve base64 olarak döndür
         if '<img src="' in response:
             start_idx = response.find('<img src="') + len('<img src="')
@@ -38,7 +37,7 @@ def chatbot_response():
             if base64_image:
                 response = response.replace(image_url, base64_image)
 
-        print(f"Chatbot response: {response}")
+        #print(f"Chatbot response: {response}")
         return jsonify({'response': response})          #chatbotun cevabını json formatına çevirir 
     except Exception as e:
         print(f"Error: {e}")

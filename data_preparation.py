@@ -1,96 +1,139 @@
 import json
-import pandas as pd
 import re
-import string
-from transformers import BertTokenizer
+import pandas as pd
 
-#temizleme fonksiyonu (eğitim için)
-def clean_text_for_training(text):
-    text = text.lower()
-    text = re.sub(r'\[.*?\]', '', text)
-    text = re.sub(r'https?://\S+|www\.\S+', '', text)
-    text = re.sub(r'<.*?>+', '', text)
-    text = re.sub(r'[%s]' % re.escape(string.punctuation), '', text)  
-    text = re.sub(r'\n', ' ', text)
-    text = re.sub(r'\w*\d\w*', '', text)
-    text = re.sub(r'\s+', ' ', text).strip()
+def expand_titles_with_abbreviations(data):
+    expanded_data = []
+
+    for entry in data:
+        main_title = entry.get('Title', '')
+        content = entry.get('Content', [])
+
+        # Orijinal başlığı ekle
+        expanded_data.append({"Title": main_title, "Content": content})
+
+        # Parantez içindeki kısaltmayı ve açıklamasını yakalayacak regex deseni
+        match = re.search(r'\((.*?)\)', main_title)
+        if match:
+            abbreviation = match.group(1)  # Parantez içindeki kısaltma
+            expanded_title = re.sub(r'\s*\(.*?\)\s*', '', main_title).strip()  # Parantez içini çıkararak başlığı genişlet
+
+            # Genişletilmiş başlığı ekle
+            expanded_data.append({"Title": expanded_title, "Content": content})
+
+            # Kısaltmayı tek başına başlık olarak ekle
+            expanded_data.append({"Title": abbreviation, "Content": content})
+
+    return expanded_data
+
+def clean_text(text):
+    # Noktalama işaretlerini temizle ve diğer temizlik işlemleri
+    text = re.sub(r'[^\w\s]', '', text)  # Noktalama işaretlerini kaldır
+    text = re.sub(r'<.*?>', '', text)  # HTML etiketlerini kaldır
+    text = re.sub(r'\s+', ' ', text)  # Fazla boşlukları tek boşluğa indir
+    text = re.sub(r'\[.*?\]', '', text)  # Köşeli parantez içindeki metni kaldır
+    text = text.strip()  # Başlangıç ve sonundaki boşlukları kaldır
     return text
 
-#json dosyasını yükleme fonksiyonu
-def load_json_file(file_path):
+def process_table_rows_for_training(table):
+    rows = table.get('Rows', [])
+    processed_rows = []
+
+    for row in rows:
+        processed_row = [cell.strip() for cell in row if cell.strip()]
+        if processed_row:
+            processed_rows.append(processed_row)
+    
+    return processed_rows
+
+def process_list_items(list_items):
+    processed_items = []
+    for item in list_items:
+        if isinstance(item, dict) and 'row' in item:
+            processed_items.append(item['row'].strip())
+    return processed_items
+
+def process_blockquote(blockquote):
+    return blockquote.strip()
+
+def process_data(file_path, clean=False):
+    question_answer_data = []
+    plain_text_data = []
+    
     with open(file_path, 'r', encoding='utf-8') as file:
-        return json.load(file)
+        data = json.load(file)
+        expanded_data = expand_titles_with_abbreviations(data)
+        
+        for entry in expanded_data:
+            title = entry.get('Title', '')
+            content_list = entry.get('Content', [])
+            
+            if not content_list:
+                continue
 
-#metinleri eğitim için küçük parçalara bölme fonksiyonu
-def split_text(text, tokenizer, max_len=512):
-    tokens = tokenizer.tokenize(text)
-    chunks = []
-    for i in range(0, len(tokens), max_len - 2):  
-        chunk = tokens[i:i + max_len - 2]
-        chunk_text = tokenizer.convert_tokens_to_string(chunk)
-        chunks.append(chunk_text)
-    return chunks
+            structured_content = []
 
-#öncelikli veri kontrolü (chatbot eğitimi sırasında soru cevap halindeki datalar daha iyi öğrenme sergilediği için onların önceliklerini düşürüyoruz)
-def is_priority_data(title):
-    return not title.endswith('?')
+            for content_item in content_list:
+                if 'Paragraph' in content_item:
+                    paragraph = content_item['Paragraph'].strip()
+                    if paragraph:
+                        if clean:
+                            paragraph = clean_text(paragraph)
+                        structured_content.append({"Paragraph": paragraph})
 
-#veriyi dataframe dönüştürme (eğitim için temizlenmiş ve bölünmüş verilerle)
-def extract_data_for_training(data, tokenizer, max_len=512):
-    records = []
-    for entry in data:
-        title = entry.get('Title', '')
-        is_priority = is_priority_data(title)
-        content_list = entry.get('Content', [])
-        #resimleri eğitime tabi tutmuyoruz
-        for content in content_list:
-            if 'Paragraph' in content:
-                paragraph = clean_text_for_training(content['Paragraph'])
-                split_paragraphs = split_text(paragraph, tokenizer, max_len)
-                for split_paragraph in split_paragraphs:
-                    records.append({'Title': title, 'Content Type': 'Paragraph', 'Content': split_paragraph, 'Priority': is_priority})          
-            elif 'Table' in content:
-                table = content['Table']
-                headers = table.get('Headers', [])
-                rows = table.get('Rows', [])
-                table_text = f"Headers: {headers}, Rows: {rows}"
-                split_tables = split_text(table_text, tokenizer, max_len)
-                for split_table in split_tables:
-                    records.append({'Title': title, 'Content Type': 'Table', 'Content': split_table, 'Priority': is_priority})
-    return pd.DataFrame(records)
+                if 'Table' in content_item:
+                    table_content = process_table_rows_for_training(content_item['Table'])
+                    if table_content:
+                        structured_content.append({"Table": table_content})
 
-#eğitilecek json dosyalarının yolları
-file_paths_to_train = [
-    './filtered_data_kitaplık.json',
-    './filtered_data_kitaplık_eng.json',
-    './filtered_data_epaticom.json',
-    './basic_data.json'
-]
+                if 'List' in content_item:
+                    list_content = process_list_items(content_item['List'])
+                    if list_content:
+                        structured_content.append({"List": list_content})
 
-#tüm json dosyalarından verileri birleştirme
-combined_data_list = []
-for file_path in file_paths_to_train:
-    data = load_json_file(file_path)
-    combined_data_list.extend(data)
+                if 'Blockquote' in content_item:
+                    blockquote_content = process_blockquote(content_item['Blockquote'])
+                    if blockquote_content:
+                        structured_content.append({"Blockquote": blockquote_content})
 
-#tokenizer yükleme
-tokenizer = BertTokenizer.from_pretrained("bert-large-uncased-whole-word-masking-finetuned-squad")
+            if structured_content:  # Eğer içerik boş değilse
+                if "?" in title:
+                    question_answer_data.append({"Title": title, "Content": structured_content})
+                else:
+                    plain_text_data.append({"Title": title, "Content": structured_content})
 
-#ilk veriyi dataframe dönüştürme ve kaydetme(cevap için)
-df_original = pd.DataFrame(combined_data_list)
-df_original.to_pickle('data_original.pkl')
+    return question_answer_data, plain_text_data
 
-# Verileri DataFrame'e çıkarma (eğitim için)
-df_training = extract_data_for_training(combined_data_list, tokenizer, max_len=512)
+def merge_datasets(*datasets):
+    merged_data = []
+    for dataset in datasets:
+        merged_data.extend(dataset)
+    return merged_data
 
-#ağırlıklandırma stratejisi(priority si true olanların önceliğini artırma)
-df_training['Weight'] = df_training['Priority'].apply(lambda x: 1 if x else 2)
+if __name__ == "__main__":
+    # Her bir dosya için veri işle, tablo, liste, blockquote verilerini koruyarak
+    processed_tr_data_qa, processed_tr_data_plain = process_data('./filtered_data_kitaplık.json', clean=False)
+    processed_en_data_qa, processed_en_data_plain = process_data('./filtered_data_kitaplık_eng.json', clean=False)
+    processed_basic_data_qa, processed_basic_data_plain = process_data('./basic_data.json', clean=False)
+    processed_epaticom_data_qa, processed_epaticom_data_plain = process_data('./filtered_data_epaticom.json', clean=False)
 
-#dataframe kaydetme (eğitim verisi)
-df_training.to_pickle('data_training.pkl')
+    # İşlenmiş verileri birleştir
+    merged_data_qa = merge_datasets(processed_tr_data_qa, processed_en_data_qa, processed_basic_data_qa, processed_epaticom_data_qa)
+    merged_data_plain = merge_datasets(processed_tr_data_plain, processed_en_data_plain, processed_basic_data_plain, processed_epaticom_data_plain)
 
+    # Verileri kaydet
+    with open('data_question_answer.json', 'w', encoding='utf-8') as f:
+        json.dump(merged_data_qa, f, ensure_ascii=False, indent=4)
 
-#kontrol amaçlı yazdırma(daha sonra silinebilir)
-print(df_training.head())
-print(df_original.head())
-print(df_training)
+    with open('data_plain_text.json', 'w', encoding='utf-8') as f:
+        json.dump(merged_data_plain, f, ensure_ascii=False, indent=4)
+
+    # Pandas DataFrame'e çevir ve tabloyu göster
+    df_qa = pd.DataFrame(merged_data_qa)
+    df_plain = pd.DataFrame(merged_data_plain)
+
+    print("Question-Answer Data (İlk 5 Satır):")
+    print(df_qa.head())
+
+    print("\nPlain Text Data (İlk 5 Satır):")
+    print(df_plain.head())

@@ -2,9 +2,7 @@ import requests         # web sitesinden veri çekme kütüphanesi
 from bs4 import BeautifulSoup       #HTML içeriklerini parçalama 
 import json
 from urllib.parse import urljoin, urlparse      #urlleri birleştirme ve cözümleme
-import time
 
-# Web sitesinin başlangıç URL'si
 starting_url = 'https://www.epati.com.tr/'          #başlangıç urlsi
 visited = set()                                 #daha önce ziyaret edilen urlleri tutarak bir daha ziyareti önlemek için
 to_visit = [starting_url]                           #ziyaret edilmesi gereken urllerin olduğu liste
@@ -128,7 +126,7 @@ while to_visit:
         print(f'Visiting: {current_url}')           #ziyaret edilen urller terminale yazıdırılır
         parse_page(current_url)
         visited.add(current_url)
-        time.sleep(1)                               #site engellemesin diye 1 sn beklenir
+
 
 #veriler jsona kaydedilir
 with open('raw_data_epaticom.json', 'w', encoding='utf-8') as json_file:

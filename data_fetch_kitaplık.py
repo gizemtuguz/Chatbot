@@ -4,14 +4,14 @@ import json
 from urllib.parse import urljoin
 
 starting_urls = [
-    'https://kb.epati.com.tr/faq/faq/',
-    'https://kb.epati.com.tr/glossary-of-terms/',
-    'https://kb.epati.com.tr/configuration-examples/antikor-v2-next-generation-firewall/',
-    'https://kb.epati.com.tr/configuration-examples/antikor-v2-layer2-tunnel/',
-    'https://kb.epati.com.tr/configuration-examples/antikor-v2-tunnel-backbone/',
-    'https://kb.epati.com.tr/guides/antikor-v2-next-generation-firewall/',
-    'https://kb.epati.com.tr/guides/antikor-v2-layer2-tunnel/',
-    'https://kb.epati.com.tr/guides/antikor-v2-tunnel-backbone/'
+    'https://kitaplik.epati.com.tr/sss/sss/',
+    'https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-yeni-nesil-guvenlik-duvari/',
+    'https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-layer2-tunelleme/',
+    'https://kitaplik.epati.com.tr/kilavuzlar/antikor-v2-tunel-omurga/',
+    'https://kitaplik.epati.com.tr/yapilandirma-ornekleri/antikor-v2-yeni-nesil-guvenlik-duvari/',
+    'https://kitaplik.epati.com.tr/terimler-sozlugu/',
+    'https://kitaplik.epati.com.tr/yapilandirma-ornekleri/antikor-v2-layer2-tunelleme/',
+    'https://kitaplik.epati.com.tr/yapilandirma-ornekleri/antikor-v2-tunel-omurga/'
 ]
 
 data = []
@@ -39,21 +39,25 @@ def parse_page(url):
     current_heading_h3 = None
     current_heading_h4 = None
     paragraph_content = ""
-    skip_next_p = False  # network-topology ve hemen sonraki p'yi atlamak için
+    skip_next_p = False  # network-şeması ve hemen sonraki p'yi atlamak için
     
     for element in elements:
         if element.name == 'h1':
-            if paragraph_content:
-                content_data = {'Main Heading': current_heading_h1, 'Subheading': current_heading_h2 or current_heading_h3 or current_heading_h4, 'Paragraph': paragraph_content.strip()}
-                page_data["Content"].append(content_data)
-                paragraph_content = ""
-            current_heading_h1 = element.get_text(strip=True)
-            current_heading_h2 = None
-            current_heading_h3 = None
-            current_heading_h4 = None
+            if element.get('id') == 'network-şeması':
+                skip_next_p = True  # Bir sonraki p etiketini atlamak için bayrak ayarlayın
+                continue
+            else:
+                if paragraph_content:
+                    content_data = {'Main Heading': current_heading_h1, 'Subheading': current_heading_h2 or current_heading_h3 or current_heading_h4, 'Paragraph': paragraph_content.strip()}
+                    page_data["Content"].append(content_data)
+                    paragraph_content = ""
+                current_heading_h1 = element.get_text(strip=True)
+                current_heading_h2 = None
+                current_heading_h3 = None
+                current_heading_h4 = None
         elif element.name == 'h2' or element.name == 'h4':  # h4'ü de h2 olarak kabul ediyoruz
-            # Eğer h2 id="network-topology" ise bu h2'yi ve hemen sonraki p'yi atla
-            if element.get('id') == 'network-topology':
+            # Eğer herhangi bir etiketin id="network-şeması" ise ve img varsa bu etiketi ve hemen sonraki p'yi atla
+            if element.get('id') == 'network-şeması':
                 skip_next_p = True  # Bir sonraki p etiketini atlamak için bayrak ayarlayın
                 continue
             if element.find('img'):
@@ -67,19 +71,23 @@ def parse_page(url):
                 current_heading_h3 = None
                 current_heading_h4 = None
         elif element.name == 'h3':
-            if paragraph_content:
-                content_data = {'Main Heading': current_heading_h1, 'Subheading': current_heading_h2 or current_heading_h3 or current_heading_h4, 'Paragraph': paragraph_content.strip()}
-                page_data["Content"].append(content_data)
-                paragraph_content = ""
-            current_heading_h3 = element.get_text(strip=True)
-            current_heading_h4 = None
+            if element.get('id') == 'network-şeması':
+                skip_next_p = True  # Bir sonraki p etiketini atlamak için bayrak ayarlayın
+                continue
+            else:
+                if paragraph_content:
+                    content_data = {'Main Heading': current_heading_h1, 'Subheading': current_heading_h2 or current_heading_h3 or current_heading_h4, 'Paragraph': paragraph_content.strip()}
+                    page_data["Content"].append(content_data)
+                    paragraph_content = ""
+                current_heading_h3 = element.get_text(strip=True)
+                current_heading_h4 = None
         elif element.name == 'h5':
             if paragraph_content:
                 content_data = {'Main Heading': current_heading_h1, 'Subheading': current_heading_h2 or current_heading_h3 or current_heading_h4, 'Paragraph': paragraph_content.strip()}
                 page_data["Content"].append(content_data)
                 paragraph_content = ""
         elif element.name == 'p':
-            if skip_next_p:  # Eğer bir önceki h2 network-topology id'sine sahipse bu p'yi atla
+            if skip_next_p:  # Eğer bir önceki etiket network-şeması id'sine sahipse bu p'yi atla
                 skip_next_p = False
                 continue
             # p etiketi içinde strong varsa bu fonksiyonu kullanarak işleme
@@ -162,7 +170,7 @@ for starting_url in starting_urls:
             parse_page(current_url)
             visited.add(current_url)
 
-with open('./raw_data_kitaplık_eng.json', 'w', encoding='utf-8') as json_file:
+with open('./raw_data_kitaplık.json', 'w', encoding='utf-8') as json_file:
     json.dump(data, json_file, ensure_ascii=False, indent=4)
 
-print('Veriler başarıyla raw_data_kitaplık_eng.json dosyasına kaydedildi.')
+print('Veriler başarıyla raw_data_kitaplık.json dosyasına kaydedildi.')
