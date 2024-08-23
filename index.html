@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -80,6 +80,14 @@
             color: #f0f0f0;
         }
 
+        .option-message {
+            align-self: flex-start;
+            background-color: #e7e7e7;
+            color: #000;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
         #chatbot-input {
             display: flex;
             padding: 10px;
@@ -102,22 +110,6 @@
         }
         #chatbot-input button:hover {
             background-color: #C50510;
-        }
-        #openChatbot {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background-color: #E30613;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            font-size: 30px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         /* Resimleri boyutlandırma */
@@ -192,6 +184,8 @@
 <button id="openChatbot" onclick="toggleChatbot()">&#128172;</button>
 
 <script>
+    let userSelectedTitle = null;
+
     // Chatbot açma/kapatma işlemleri
     function toggleChatbot() {
         var chatbot = document.getElementById("chatbot");
@@ -202,68 +196,75 @@
         }
     }
 
-// Kullanıcı girdisini temizleyen gelişmiş fonksiyon
-function cleanUserInput(input) {
-    // Noktalama işaretleri, özel karakterler, emojiler ve fazla boşluklar dahil her şeyi temizler
-    input = input.replace(/[^\w\s]/gi, ''); // Noktalama işaretlerini ve özel karakterleri kaldırır
-    input = input.replace(/[\u{1F600}-\u{1F64F}]/gu, ''); // Yüz ifadeleri (emojiler)
-    input = input.replace(/[\u{1F300}-\u{1F5FF}]/gu, ''); // Semboller ve piktogramlar
-    input = input.replace(/[\u{1F680}-\u{1F6FF}]/gu, ''); // Taşıtlar ve semboller
-    input = input.replace(/[\u{2600}-\u{26FF}]/gu, '');   // Çeşitli semboller
-    input = input.replace(/\s+/g, ' ').trim(); // Fazla boşlukları kaldır ve baştaki/sondaki boşlukları sil
-    return input;
-}
+    // Kullanıcı girdisini temizleyen gelişmiş fonksiyon
+    function cleanUserInput(input) {
+        // Sadece gereksiz özel karakterleri temizle, Türkçe karakterleri koru
+        input = input.replace(/[^\w\sçÇöÖüÜğĞşŞıİ]/gi, ''); // Türkçe karakterleri koru
+        input = input.replace(/\s+/g, ' ').trim(); // Fazla boşlukları kaldır ve baştaki/sondaki boşlukları sil
+        return input;
+    }
 
-// Mesaj gönderme işlemi
-function sendMessage() {
-    var userInput = document.getElementById("userInput").value;
+    function sendMessage(option = null) {
+        var userInput = document.getElementById("userInput").value;
 
-    // Kullanıcı girdisini temizle
-    userInput = cleanUserInput(userInput);
+        // Kullanıcı girdisini temizle
+        userInput = cleanUserInput(userInput);
 
-    var chatbox = document.getElementById("chatbot-messages");
+        var chatbox = document.getElementById("chatbot-messages");
 
-    // Kullanıcı mesajı
-    var userMessageBox = document.createElement("div");
-    userMessageBox.className = "message user-message";
-    userMessageBox.textContent = userInput;
-    chatbox.appendChild(userMessageBox);
-
-    // Sunucuya istek gönder
-    fetch('http://127.0.0.1:5000/chatbot', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ message: userInput })
-    })
-    .then(response => response.json())
-    .then(data => {
-        var botMessageBox = document.createElement("div");
-        botMessageBox.className = "message bot-message";
-        botMessageBox.innerHTML = data.response; // içeriği HTML olarak ekle
-
-        // Resim tıklanabilirliğini etkinleştir
-        var images = botMessageBox.getElementsByTagName("img");
-        for (var i = 0; i < images.length; i++) {
-            images[i].onclick = function() {
-                showPopup(this.src);
-            };
+        if (option !== null) {
+            // Kullanıcı bir seçenek seçmişse
+            userInput = option;
+            userSelectedTitle = option;
+        } else {
+            // Yeni bir mesaj gönderilmişse
+            var userMessageBox = document.createElement("div");
+            userMessageBox.className = "message user-message";
+            userMessageBox.textContent = userInput;
+            chatbox.appendChild(userMessageBox);
         }
 
-        chatbox.appendChild(botMessageBox);
-        chatbox.scrollTop = chatbox.scrollHeight;
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        var errorResponse = document.createElement("div");
-        errorResponse.className = "message bot-message";
-        errorResponse.textContent = "Bir hata oluştu, lütfen tekrar deneyin.";
-        chatbox.appendChild(errorResponse);
-    });
+        // Sunucuya istek gönder
+        fetch('http://127.0.0.1:5001/chatbot', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message: userSelectedTitle || userInput })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Eğer seçenekler dönerse, seçenekleri göster
+            if (data.options) {
+                data.options.forEach(option => {
+                    var optionMessageBox = document.createElement("div");
+                    optionMessageBox.className = "message option-message";
+                    optionMessageBox.textContent = option.title;
+                    optionMessageBox.onclick = function() {
+                        sendMessage(option.full_title);
+                    };
+                    chatbox.appendChild(optionMessageBox);
+                });
+            } else {
+                // Normal mesajı göster
+                var botMessageBox = document.createElement("div");
+                botMessageBox.className = "message bot-message";
+                botMessageBox.innerHTML = data.response;  // İçeriği HTML olarak ekle
 
-    document.getElementById("userInput").value = "";
-}
+                chatbox.appendChild(botMessageBox);
+                chatbox.scrollTop = chatbox.scrollHeight;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            var errorResponse = document.createElement("div");
+            errorResponse.className = "message bot-message";
+            errorResponse.textContent = "Bir hata oluştu, lütfen tekrar deneyin.";
+            chatbox.appendChild(errorResponse);
+        });
+
+        document.getElementById("userInput").value = "";
+    }
 
     // Resme tıklanınca pop-up göster
     function showPopup(imageSrc) {

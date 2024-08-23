@@ -5,5 +5,7 @@ __pycache__/chatbot_application.cpython-312.pyc
 !basic_data.json
 /logs
 /output
-/trained_model
+/trained_model_plain_text
+/trained_model_qa
+/basic_data_trained_model
 *.pkl

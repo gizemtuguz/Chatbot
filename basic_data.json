@@ -150,5 +150,40 @@
                 "Paragraph": "Görüşürüz! Harika bir gün dilerim!"
             }
         ]
+    },
+    {
+        "Title": "İletişim",
+        "Content": [
+            {
+                "Paragraph": "Teknik Destek: Destek Portalı Girişi"
+            },
+            {
+                "Paragraph": "Eposta: bilgi@epati.com.tr"
+            },
+            {
+                "Paragraph": "Telefon: +90 324 361 02 33"
+            },
+            {
+                "Paragraph": "Faks: +90 324 361 02 39"
+            },
+            {
+                "Paragraph": "Adres: Mersin Üniversitesi Çiftlikköy Kampüsü, Teknopark İdari Binası Kat:4 No: 411 33343 Yenişehir / MERSİN"
+            }
+        ]
+    },
+    {
+        "Title": "Banka Bilgileri",
+        "Content": [
+            {
+                "Table": [
+                    ["Banka", "Şube Adı", "Hesap No", "IBAN"],
+                    ["Türkiye İş Bankası TL Hesabı", "Eğriçam (6613)", "46258", "TR56 0006 4000 0016 6130 0462 58"],
+                    ["Türkiye İş Bankası EUR Hesabı", "Eğriçam (6613)", "6816", "TR86 0006 4000 0026 6130 0068 16"],
+                    ["Türkiye İş Bankası USD Hesabı", "Eğriçam (6613)", "6820", "TR86 0006 4000 0026 6130 0068 20"]
+                ]
+            }
+        ]
     }
+    
+    
 ]
