@@ -114,12 +114,11 @@ if __name__ == "__main__":
     # Her bir dosya için veri işle, tablo, liste, blockquote verilerini koruyarak
     processed_tr_data_qa, processed_tr_data_plain = process_data('./filtered_data_kitaplık.json', clean=False)
     processed_en_data_qa, processed_en_data_plain = process_data('./filtered_data_kitaplık_eng.json', clean=False)
-    processed_basic_data_qa, processed_basic_data_plain = process_data('./basic_data.json', clean=False)
     processed_epaticom_data_qa, processed_epaticom_data_plain = process_data('./filtered_data_epaticom.json', clean=False)
 
     # İşlenmiş verileri birleştir
-    merged_data_qa = merge_datasets(processed_tr_data_qa, processed_en_data_qa, processed_basic_data_qa, processed_epaticom_data_qa)
-    merged_data_plain = merge_datasets(processed_tr_data_plain, processed_en_data_plain, processed_basic_data_plain, processed_epaticom_data_plain)
+    merged_data_qa = merge_datasets(processed_tr_data_qa, processed_en_data_qa, processed_epaticom_data_qa)
+    merged_data_plain = merge_datasets(processed_tr_data_plain, processed_en_data_plain, processed_epaticom_data_plain)
 
     # Verileri kaydet
     with open('data_question_answer.json', 'w', encoding='utf-8') as f:
