@@ -7,6 +7,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import logging
 import langdetect
+import webbrowser
+from threading import Timer
 
 # Loglama ayarları
 logging.basicConfig(level=logging.DEBUG)
@@ -37,7 +39,7 @@ def load_model_and_tokenizer(model_path):
 # Modelleri ve tokenizerları yükleme
 model_1, tokenizer_1 = load_model_and_tokenizer('trained_model_qa')
 model_2, tokenizer_2 = load_model_and_tokenizer('trained_model_plain_text')
-model_3, tokenizer_3 = load_model_and_tokenizer('basic_data_trained_model/trained_distilbert_model')
+model_3, tokenizer_3 = load_model_and_tokenizer('/Users/gizemtuguz/Desktop/Chatbot_epati/basic_data_trained_model/trained_distilbert_model')
 
 # Model tahmin fonksiyonu
 def predict_with_model(model, tokenizer, input_text):
@@ -161,6 +163,10 @@ def chatbot():
 
     return jsonify({'response': best_response})
 
-# Flask sunucusunu çalıştırma
+def open_browser():
+    webbrowser.open_new('http://127.0.0.1:5001/')
+
 if __name__ == '__main__':
+    # Tarayıcıyı otomatik olarak açmak için bir zamanlayıcı başlatın
+    Timer(3, open_browser).start()
     app.run(debug=True, port=5001)
