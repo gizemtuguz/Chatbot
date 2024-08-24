@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import json
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
@@ -121,6 +121,11 @@ def get_best_match_from_json(input_text, json_data, threshold=0.6):
     # HTML'ye dönüştür ve döndür
     return format_json_to_html(best_match) if best_match else "<p>Üzgünüm, bu soruya dair bir cevabım yok.</p>", highest_similarity
 
+# Anasayfa için route ekleyin
+@app.route('/')
+def home():
+    return render_template('index.html')
+
 @app.route('/chatbot', methods=['POST'])
 def chatbot():
     user_input = request.json.get('message').strip().lower()  # Normalize input
@@ -134,7 +139,7 @@ def chatbot():
     else:  # Varsayılan olarak Türkçe içerik
         response_kitaplik, similarity_kitaplik = get_best_match_from_json(user_input, kitaplık_data_tr)
 
-    # Other model predictions and dataset searches
+    # Diğer model tahminleri ve veri seti aramaları
     confidence_1 = predict_with_model(model_1, tokenizer_1, user_input)
     confidence_2 = predict_with_model(model_2, tokenizer_2, user_input)
     confidence_3 = predict_with_model(model_3, tokenizer_3, user_input)
@@ -144,7 +149,7 @@ def chatbot():
     response_basic, similarity_basic = get_best_match_from_json(user_input, basic_data)
     response_epaticom, similarity_epaticom = get_best_match_from_json(user_input, epaticom_data)
 
-    # Determine the best response based on similarity
+    # Benzerliklere göre en iyi yanıtı belirleme
     if similarity_basic >= similarity_epaticom and similarity_basic >= similarity_kitaplik:
         best_response = response_basic
     elif similarity_epaticom >= similarity_basic and similarity_epaticom >= similarity_kitaplik:
@@ -152,7 +157,7 @@ def chatbot():
     else:
         best_response = response_kitaplik
 
-    logging.debug(f"Selected Response: {best_response}")  # Log the selected response
+    logging.debug(f"Selected Response: {best_response}")  # Seçilen yanıtı logla
 
     return jsonify({'response': best_response})
 
